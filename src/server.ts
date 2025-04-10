@@ -9,7 +9,9 @@ app.use(express.json());
 
 // 路由引入
 import userRouter from './routes/users';
+import authRouter from './routes/auth';
 app.use('/api/users', userRouter);
+app.use('/api/auth', authRouter);
 
 // 错误处理
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {

@@ -1,4 +1,3 @@
-// src/routes/users.ts
 import { Router } from 'express';
 import {
   getAllUsers,
