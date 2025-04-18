@@ -44,7 +44,7 @@ export const login = async (req: Request, res: Response, next?: NextFunction): P
       return res.status(423).json({ error: '用户被锁定' });
     }
 
-    // 检查密码是否正确
+    // 检查密码是否正确~~hash
     // const isPasswordValid = await bcrypt.compare(password, user.password_hash);
     const isPasswordValid = password === user.password_hash;
     if (!isPasswordValid) {
@@ -64,13 +64,13 @@ export const login = async (req: Request, res: Response, next?: NextFunction): P
       true,
       200,
       '登录成功',
-      { id: user.id, username: user.username }
+      { id: user.id, username: user.username, token }
     );
     // res.json({ message: '登录成功', user: { id: user.id, username: user.username }, token });
     res.json(response);
   } catch (err) {
     console.error('Login error:', err);
-    // 构建错误响应
+
     const response: ApiResponse<null> = createApiResponse(
       false,
       500,
@@ -91,3 +91,45 @@ export const login = async (req: Request, res: Response, next?: NextFunction): P
 //     res.status(500).json({ error: 'Database query failed' });
 //   }
 // };
+
+/** 注册 */
+export const register = async (req: Request, res: Response, next?: NextFunction): Promise<Response | void> => {
+  const { username, password } = req.body as LoginRequest;
+  try {
+    // 检查用户是否已经存在
+    const rows = await pool.query<RowDataPacket[]>('SELECT * FROM USER WHERE username=? OR email=?', [username, username]);
+    if (rows) {
+      const response: ApiResponse<null> = createApiResponse(
+        false,
+        404,
+        '用户已经存在'
+      );
+      return res.status(404).json(response);
+    }
+    // 判断密码-正则判断password大于等于8位大小写特殊字符
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\W).{8,}$/;
+    if (!passwordRegex.test(password)) {
+      const response: ApiResponse<null> = createApiResponse(
+        false,
+        404,
+        '密码必须至少8位且包含大小写字母及特殊字符'
+      );
+      return res.status(404).json(response);
+    }
+    // 对密码进行hash
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // 更新用户创建时间
+    const createdAt = new Date();
+    // 数据库插入
+    await pool.query('INSERT INTO USER (username, )')
+    const response: ApiResponse<null> = createApiResponse(
+      true,
+      201,
+      '用户注册成功'
+    )
+    return res.status(201).json(response);
+  } catch (error) {
+
+  }
+}
